@@ -4,3 +4,21 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+surreal_socket = { path = "../surrealsocket" }
+rocket = { version = "0.5.1", features = ["tls", "json"] }
+tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
+serde = "1.0.219"
+serde_json = "1.0.140"
+chrono = "0.4.40"
+log = "0.4.26"
+confy = "0.6.1"
+utoipa = "5.3.1"
+utoipa-rapidoc = "6.0.0"
+argon2 = "0.5.3"
+password-hash = "0.5.0"
+async-trait = "0.1.88"
+surrealdb = "2.2.1"
+jsonwebtoken = "9.3.1"
+subtle = "2.6"
+email_address = "0.2.9"
+env_logger = "0.11.7"
