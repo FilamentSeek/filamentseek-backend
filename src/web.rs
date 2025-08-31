@@ -55,6 +55,12 @@ pub async fn start_web() {
                 routes::users::update_user,
                 routes::users::delete_user,
                 routes::bootstrap_admin::bootstrap_admin_route,
+                // Products
+                routes::products::get_product,
+                routes::products::create_product,
+                routes::products::update_product,
+                routes::products::delete_product,
+                routes::products::search_products,
             ],
         )
         .register(

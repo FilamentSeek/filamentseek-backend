@@ -1,3 +1,5 @@
+use crate::generic::surrealdb_client;
+
 mod error;
 mod generic;
 mod jobs;
@@ -20,6 +22,12 @@ async fn main() {
     }
 
     generic::Environment::load_path("config.toml");
+
+    // Check surrealdb connection
+    surrealdb_client()
+        .await
+        .expect("Failed to connect to SurrealDB");
+
     log::info!("Starting...");
     jobs::Job::spawn_all();
     web::start_web().await;

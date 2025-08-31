@@ -2,6 +2,11 @@ use crate::generic::GenericResponse;
 use crate::routes::bootstrap_admin::__path_bootstrap_admin_route;
 use crate::routes::bootstrap_admin::BootstrapAdminRequest;
 use crate::routes::check_token::__path_check_token;
+use crate::routes::products::__path_create_product;
+use crate::routes::products::__path_delete_product;
+use crate::routes::products::__path_get_product;
+use crate::routes::products::__path_search_products;
+use crate::routes::products::__path_update_product;
 use crate::routes::token::__path_token_json;
 use crate::routes::token::{TokenRequest, TokenResponse};
 use crate::routes::users::__path_change_password;
@@ -30,7 +35,7 @@ use utoipa_rapidoc::RapiDoc;
         title = "FilamentSeek API",
         description = "https://github.com/FilamentSeek/filamentseek-backend"
     ),
-    paths(token_json, register, change_password, update_user, delete_user, get_user, get_users, bootstrap_admin_route, check_token),
+    paths(token_json, register, change_password, update_user, delete_user, get_user, get_users, bootstrap_admin_route, check_token, create_product, update_product, delete_product, search_products, get_product),
     components(schemas(TokenRequest, TokenResponse, GenericResponse, RegistrationRequest, ChangePasswordRequest, UserRequest, UserResponse, BootstrapAdminRequest, DummySuccess)),
     tags((name = "auth", description = "OAuth 2.0 Authentication"),
         (name = "user", description = "User management endpoints. Use `me` in place of user ID to refer to the authenticated user"),

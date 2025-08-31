@@ -21,6 +21,7 @@ use utoipa::ToSchema;
 #[derive(Serialize, ToSchema)]
 pub struct UserResponse {
     pub uuid: String,
+    pub username: String,
     pub is_admin: bool,
     #[schema(value_type = String)]
     pub email: EmailAddress,
@@ -30,6 +31,7 @@ impl UserResponse {
     pub async fn from_user(user: User) -> Result<Self, Error> {
         Ok(Self {
             uuid: user.uuid.uuid_string(),
+            username: user.username.to_string(),
             is_admin: user.is_admin,
             email: user.email,
         })

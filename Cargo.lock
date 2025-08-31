@@ -1184,6 +1184,7 @@ dependencies = [
  "confy",
  "email_address",
  "env_logger",
+ "fuzzy-matcher",
  "jsonwebtoken",
  "log",
  "password-hash",
