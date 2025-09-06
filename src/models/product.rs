@@ -168,7 +168,7 @@ pub struct ProductResponse {
 impl From<Product> for ProductResponse {
     fn from(product: Product) -> Self {
         Self {
-            uuid: product.uuid.uuid_string(),
+            uuid: product.uuid.to_uuid_string(),
             name: product.name,
             price: product.price,
             price_per_kg: product.price_per_kg,

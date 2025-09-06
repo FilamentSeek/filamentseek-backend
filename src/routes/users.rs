@@ -30,7 +30,7 @@ pub struct UserResponse {
 impl UserResponse {
     pub async fn from_user(user: User) -> Result<Self, Error> {
         Ok(Self {
-            uuid: user.uuid.uuid_string(),
+            uuid: user.uuid.to_uuid_string(),
             username: user.username.to_string(),
             is_admin: user.is_admin,
             email: user.email,
@@ -109,7 +109,7 @@ async fn get_user_as_self_or_admin(id: &str, session: Session) -> Result<User, E
     if id == "me" {
         session.user().await
     } else {
-        match User::db_by_id(&surrealdb_client().await?, id).await? {
+        match User::db_get_by_id(&surrealdb_client().await?, id).await? {
             Some(target_user) => {
                 let session_user = session.user().await?;
 

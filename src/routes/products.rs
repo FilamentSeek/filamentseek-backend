@@ -34,7 +34,7 @@ pub async fn get_product(
 ) -> Result<Json<ProductResponse>, status::Custom<Json<GenericResponse>>> {
     let client = surrealdb_client().await.map_err(Error::from)?;
 
-    let product = Product::db_by_id(&client, product_id)
+    let product = Product::db_get_by_id(&client, product_id)
         .await
         .map_err(Error::from)?;
 
@@ -111,7 +111,7 @@ pub async fn update_product(
 
     let client = surrealdb_client().await.map_err(Error::from)?;
 
-    let existing_product = if let Some(product) = Product::db_by_id(&client, product_id)
+    let existing_product = if let Some(product) = Product::db_get_by_id(&client, product_id)
         .await
         .map_err(Error::from)?
     {
@@ -164,7 +164,7 @@ pub async fn delete_product(
 
     let client = surrealdb_client().await.map_err(Error::from)?;
 
-    let existing_product = if let Some(product) = Product::db_by_id(&client, product_id)
+    let existing_product = if let Some(product) = Product::db_get_by_id(&client, product_id)
         .await
         .map_err(Error::from)?
     {
