@@ -18,8 +18,6 @@ pub struct Product {
     pub material: FilamentMaterial,
     pub diameter: FilamentDiameter,
     pub weight: Grams,
-    pub nozzle_temp: Option<TemperatureSpec>,
-    pub bed_temp: Option<TemperatureSpec>,
 }
 
 #[async_trait]
@@ -64,14 +62,6 @@ pub enum FilamentMaterial {
     ASA,
     Unspecified,
     Other(String),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-pub enum TemperatureSpec {
-    /// Exact value (e.g. vendor says "200°C only")
-    Exact(Celsius),
-    /// Inclusive range (e.g. "190–220°C")
-    Range { min: Celsius, max: Celsius },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
@@ -129,8 +119,6 @@ pub struct ProductRequest {
     pub material: FilamentMaterial,
     pub diameter: FilamentDiameter,
     pub weight: Grams,
-    pub nozzle_temp: Option<TemperatureSpec>,
-    pub bed_temp: Option<TemperatureSpec>,
 }
 
 impl From<ProductRequest> for Product {
@@ -144,8 +132,6 @@ impl From<ProductRequest> for Product {
             material: request.material,
             diameter: request.diameter,
             weight: request.weight,
-            nozzle_temp: request.nozzle_temp,
-            bed_temp: request.bed_temp,
         }
     }
 }
@@ -161,8 +147,6 @@ pub struct ProductResponse {
     material: FilamentMaterial,
     diameter: FilamentDiameter,
     weight: Grams,
-    nozzle_temp: Option<TemperatureSpec>,
-    bed_temp: Option<TemperatureSpec>,
 }
 
 impl From<Product> for ProductResponse {
@@ -176,8 +160,6 @@ impl From<Product> for ProductResponse {
             material: product.material,
             diameter: product.diameter,
             weight: product.weight,
-            nozzle_temp: product.nozzle_temp,
-            bed_temp: product.bed_temp,
         }
     }
 }
