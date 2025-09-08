@@ -1,5 +1,6 @@
 [default]
 port = 0
+keep_alive = 10
 
 [production]
 port = 443
