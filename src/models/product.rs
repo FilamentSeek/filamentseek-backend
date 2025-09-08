@@ -34,10 +34,11 @@ impl DBRecord for Product {
 
         let query = format!(
             r#"
-            UPDATE {} SET price_per_kg = {} WHERE uuid = {};
+            UPDATE {} SET price_per_kg = {} WHERE {} = {};
             "#,
             Self::table(),
             price_per_kg,
+            Self::UUID_FIELD,
             serde_json::to_string(&self.uuid())?
         );
 

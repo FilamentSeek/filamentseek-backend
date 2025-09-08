@@ -8,7 +8,9 @@ use utoipa::ToSchema;
 use crate::{
     error::Error,
     generic::{BearerToken, GenericResponse, surrealdb_client},
-    models::product::{Product, ProductRequest, ProductResponse},
+    models::product::{
+        Cents, FilamentDiameter, FilamentMaterial, Grams, Product, ProductRequest, ProductResponse,
+    },
 };
 
 /// Get product
@@ -200,12 +202,32 @@ pub async fn search_products(
     request: Json<ProductSearchRequest>,
 ) -> Result<Json<Vec<ProductResponse>>, status::Custom<Json<GenericResponse>>> {
     let client = surrealdb_client().await.map_err(Error::from)?;
+    let mut products = Product::db_all(&client).await.map_err(Error::from)?;
+
+    if let Some(min_price) = request.min_price {
+        products.retain(|p| p.price >= min_price);
+    }
+
+    if let Some(max_price) = request.max_price {
+        products.retain(|p| p.price <= max_price);
+    }
+
+    if let Some(material) = &request.material {
+        products.retain(|p| &p.material == material);
+    }
+
+    if let Some(diameter) = &request.diameter {
+        products.retain(|p| &p.diameter == diameter);
+    }
+
+    if let Some(weight) = request.weight {
+        products.retain(|p| p.weight == weight);
+    }
 
     if let Some(name) = &request.name {
         let matcher = SkimMatcherV2::default();
-        let all_products = Product::db_all(&client).await.map_err(Error::from)?;
 
-        let mut result_products: Vec<_> = all_products
+        let mut result_products: Vec<_> = products
             .into_iter()
             .filter_map(|e| {
                 matcher
@@ -216,21 +238,21 @@ pub async fn search_products(
 
         result_products.sort_by_key(|(score, _)| *score);
         result_products.reverse();
+        products = result_products.into_iter().map(|(_, p)| p).collect();
+    } else {
+        products.sort_by_key(|p| p.price);
+    };
 
-        let results: Vec<ProductResponse> =
-            result_products.into_iter().map(|(_, e)| e.into()).collect();
-
-        return Ok(Json(results));
-    }
-
-    // temp: return all (todo: other filters)
-    let all_products = Product::db_all(&client).await.map_err(Error::from)?;
-    let results: Vec<ProductResponse> = all_products.into_iter().map(|e| e.into()).collect();
-    Ok(Json(results))
+    let response: Vec<ProductResponse> = products.into_iter().map(|e| e.into()).collect();
+    Ok(Json(response))
 }
 
 #[derive(Deserialize, ToSchema)]
 pub struct ProductSearchRequest {
     name: Option<String>,
-    // etc
+    min_price: Option<Cents>,
+    max_price: Option<Cents>,
+    material: Option<FilamentMaterial>,
+    diameter: Option<FilamentDiameter>,
+    weight: Option<Grams>,
 }
