@@ -1,4 +1,7 @@
-use crate::{generic::GenericResponse, routes};
+use crate::{
+    generic::{Environment, GenericResponse},
+    routes,
+};
 use rocket::{
     Request, catch, catchers,
     fs::{NamedFile, relative},
@@ -34,7 +37,20 @@ pub fn version() -> Json<VersionInfo> {
 }
 
 pub async fn start_web() {
+    let allowed_origins = rocket_cors::AllowedOrigins::some_exact(&[format!(
+        "https://{}",
+        Environment::new().domain.val()
+    )]);
+
+    let cors = rocket_cors::CorsOptions {
+        allowed_origins,
+        ..Default::default()
+    }
+    .to_cors()
+    .unwrap();
+
     if let Err(e) = rocket::build()
+        .attach(cors)
         .mount(
             "/",
             rocket::routes![
