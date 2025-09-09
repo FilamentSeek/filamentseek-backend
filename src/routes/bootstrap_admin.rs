@@ -16,7 +16,7 @@ use utoipa::ToSchema;
 #[utoipa::path(
     post,
     path = "/v1/bootstrap-admin",
-    description = "Elevate a given User to an admin, providing only a secret key for authentication. Only available if there are fewer than 3 admins.",
+    description = "Elevate a given User to an admin, providing only a secret key for authentication. Only available if there are fewer than 2 admins.",
     request_body(content = BootstrapAdminRequest, content_type = "application/json"),
     responses(
         (status = 200, description = "Admin set", body = UserResponse),
@@ -43,9 +43,9 @@ pub async fn bootstrap_admin(username: String, secret_key: String) -> Result<Use
         return Err(Error::generic_401());
     }
 
-    if User::db_search(&client, "is_admin", true).await?.len() >= 3 {
+    if User::db_search(&client, "is_admin", true).await?.len() >= 2 {
         return Err(Error::bad_request(
-            "Cannot bootstrap admin; there are already 3 or more admins",
+            "Cannot bootstrap admin; there are already 2 or more admins",
         ));
     }
 

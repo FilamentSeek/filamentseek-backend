@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use rocket::async_trait;
 use serde::{Deserialize, Serialize};
 use surreal_socket::{
@@ -18,6 +20,9 @@ pub struct Product {
     pub material: FilamentMaterial,
     pub diameter: FilamentDiameter,
     pub weight: Grams,
+    pub retailer: Retailer,
+    pub retailer_product_id: String,
+    pub color: String,
 }
 
 #[async_trait]
@@ -50,8 +55,8 @@ impl DBRecord for Product {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
 pub struct Cents(pub u32);
 
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, ToSchema, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
 pub enum FilamentMaterial {
     PLA,
     PLAPlus,
@@ -63,6 +68,54 @@ pub enum FilamentMaterial {
     ASA,
     Unspecified,
     Other(String),
+}
+
+impl FromStr for FilamentMaterial {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "PLA" => Self::PLA,
+            "PLAPlus" => Self::PLAPlus,
+            "ABS" => Self::ABS,
+            "PETG" => Self::PETG,
+            "TPU" => Self::TPU,
+            "Nylon" => Self::Nylon,
+            "PC" => Self::PC,
+            "ASA" => Self::ASA,
+            "Unspecified" => Self::Unspecified,
+            other => Self::Other(other.to_string()),
+        })
+    }
+}
+
+impl std::fmt::Display for FilamentMaterial {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PLA => write!(f, "PLA"),
+            Self::PLAPlus => write!(f, "PLAPlus"),
+            Self::ABS => write!(f, "ABS"),
+            Self::PETG => write!(f, "PETG"),
+            Self::TPU => write!(f, "TPU"),
+            Self::Nylon => write!(f, "Nylon"),
+            Self::PC => write!(f, "PC"),
+            Self::ASA => write!(f, "ASA"),
+            Self::Unspecified => write!(f, "Unspecified"),
+            Self::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl From<String> for FilamentMaterial {
+    fn from(s: String) -> Self {
+        FilamentMaterial::from_str(&s).unwrap()
+    }
+}
+
+impl From<FilamentMaterial> for String {
+    fn from(m: FilamentMaterial) -> String {
+        m.to_string()
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
@@ -120,6 +173,9 @@ pub struct ProductRequest {
     pub material: FilamentMaterial,
     pub diameter: FilamentDiameter,
     pub weight: Grams,
+    pub retailer: Retailer,
+    pub retailer_product_id: String,
+    pub color: String,
 }
 
 impl From<ProductRequest> for Product {
@@ -133,6 +189,9 @@ impl From<ProductRequest> for Product {
             material: request.material,
             diameter: request.diameter,
             weight: request.weight,
+            retailer: request.retailer,
+            retailer_product_id: request.retailer_product_id,
+            color: request.color,
         }
     }
 }
@@ -148,6 +207,9 @@ pub struct ProductResponse {
     material: FilamentMaterial,
     diameter: FilamentDiameter,
     weight: Grams,
+    retailer: Retailer,
+    retailer_product_id: String,
+    color: String,
 }
 
 impl From<Product> for ProductResponse {
@@ -161,6 +223,48 @@ impl From<Product> for ProductResponse {
             material: product.material,
             diameter: product.diameter,
             weight: product.weight,
+            retailer: product.retailer,
+            retailer_product_id: product.retailer_product_id,
+            color: product.color,
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(try_from = "String", into = "String")]
+pub enum Retailer {
+    Amazon,
+    Other(String),
+}
+
+impl FromStr for Retailer {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "Amazon" => Self::Amazon,
+            other => Self::Other(other.to_string()),
+        })
+    }
+}
+
+impl std::fmt::Display for Retailer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Amazon => write!(f, "Amazon"),
+            Self::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl From<String> for Retailer {
+    fn from(s: String) -> Self {
+        Retailer::from_str(&s).unwrap()
+    }
+}
+
+impl From<Retailer> for String {
+    fn from(p: Retailer) -> String {
+        p.to_string()
     }
 }

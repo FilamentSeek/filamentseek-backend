@@ -37,10 +37,11 @@ pub fn version() -> Json<VersionInfo> {
 }
 
 pub async fn start_web() {
-    let allowed_origins = rocket_cors::AllowedOrigins::some_exact(&[format!(
-        "https://{}",
-        Environment::new().domain.val()
-    )]);
+    let allowed_origins = rocket_cors::AllowedOrigins::some_exact(&[
+        format!("https://{}", Environment::new().domain.val()),
+        "http://127.0.0.1:8080".into(),
+        "http://localhost:8080".into(),
+    ]);
 
     let cors = rocket_cors::CorsOptions {
         allowed_origins,

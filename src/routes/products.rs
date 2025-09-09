@@ -216,6 +216,10 @@ pub async fn search_products(
         products.retain(|p| &p.material == material);
     }
 
+    if let Some(color) = &request.color {
+        products.retain(|p| p.color.to_lowercase() == color.to_lowercase());
+    }
+
     if let Some(diameter) = &request.diameter {
         products.retain(|p| &p.diameter == diameter);
     }
@@ -255,4 +259,5 @@ pub struct ProductSearchRequest {
     material: Option<FilamentMaterial>,
     diameter: Option<FilamentDiameter>,
     weight: Option<Grams>,
+    color: Option<String>,
 }
