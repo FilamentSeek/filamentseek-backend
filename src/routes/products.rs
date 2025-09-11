@@ -1,7 +1,7 @@
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use rocket::{response::status, serde::json::Json};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use surreal_socket::dbrecord::DBRecord;
 use utoipa::ToSchema;
 
@@ -185,6 +185,8 @@ pub async fn delete_product(
     Ok(Json(existing_product.into()))
 }
 
+const MAX_PER_PAGE: u32 = 100;
+
 /// Search products
 #[utoipa::path(
     post,
@@ -192,7 +194,7 @@ pub async fn delete_product(
     description = "Search products.",
     request_body(content = ProductSearchRequest, content_type = "application/json"),
     responses(
-        (status = 200, description = "OK", body = Vec<ProductResponse>),
+        (status = 200, description = "OK", body = ProductSearchResponse)
     ),
     security(),
     tag = "product"
@@ -200,38 +202,38 @@ pub async fn delete_product(
 #[rocket::post("/v1/products/search", data = "<request>")]
 pub async fn search_products(
     request: Json<ProductSearchRequest>,
-) -> Result<Json<Vec<ProductResponse>>, status::Custom<Json<GenericResponse>>> {
+) -> Result<Json<ProductSearchResponse>, status::Custom<Json<GenericResponse>>> {
+    if request.per_page > MAX_PER_PAGE {
+        return Err(
+            Error::bad_request(&format!("per_page cannot be greater than {MAX_PER_PAGE}")).into(),
+        );
+    }
+
     let client = surrealdb_client().await.map_err(Error::from)?;
     let mut products = Product::db_all(&client).await.map_err(Error::from)?;
 
     if let Some(min_price) = request.min_price {
         products.retain(|p| p.price >= min_price);
     }
-
     if let Some(max_price) = request.max_price {
         products.retain(|p| p.price <= max_price);
     }
-
     if let Some(material) = &request.material {
         products.retain(|p| &p.material == material);
     }
-
     if let Some(color) = &request.color {
         products.retain(|p| p.color.to_lowercase() == color.to_lowercase());
     }
-
     if let Some(diameter) = &request.diameter {
         products.retain(|p| &p.diameter == diameter);
     }
-
     if let Some(weight) = request.weight {
         products.retain(|p| p.weight == weight);
     }
 
     if let Some(name) = &request.name {
         let matcher = SkimMatcherV2::default();
-
-        let mut result_products: Vec<_> = products
+        let mut ranked: Vec<_> = products
             .into_iter()
             .filter_map(|e| {
                 matcher
@@ -239,25 +241,55 @@ pub async fn search_products(
                     .map(|score| (score, e))
             })
             .collect();
-
-        result_products.sort_by_key(|(score, _)| *score);
-        result_products.reverse();
-        products = result_products.into_iter().map(|(_, p)| p).collect();
+        ranked.sort_by_key(|(score, _)| *score);
+        ranked.reverse();
+        products = ranked.into_iter().map(|(_, p)| p).collect();
     } else {
         products.sort_by_key(|p| p.price);
+    }
+
+    let page = request.page.unwrap_or(1).max(1);
+    let per_page = request.per_page.clamp(1, MAX_PER_PAGE);
+    let offset = (page - 1) as usize * per_page as usize;
+    let total_len = products.len();
+    let end = total_len.min(offset + per_page as usize);
+
+    let page_slice: Vec<ProductResponse> = if offset < total_len {
+        products[offset..end]
+            .iter()
+            .cloned()
+            .map(|p| p.into())
+            .collect()
+    } else {
+        Vec::new()
     };
 
-    let response: Vec<ProductResponse> = products.into_iter().map(|e| e.into()).collect();
-    Ok(Json(response))
+    let resp = ProductSearchResponse {
+        items: page_slice,
+        total: total_len as u64,
+        total_pages: ((total_len as f64) / (per_page as f64)).ceil() as u64,
+    };
+
+    Ok(Json(resp))
 }
 
 #[derive(Deserialize, ToSchema)]
 pub struct ProductSearchRequest {
-    name: Option<String>,
-    min_price: Option<Cents>,
-    max_price: Option<Cents>,
-    material: Option<FilamentMaterial>,
-    diameter: Option<FilamentDiameter>,
-    weight: Option<Grams>,
-    color: Option<String>,
+    pub name: Option<String>,
+    pub min_price: Option<Cents>,
+    pub max_price: Option<Cents>,
+    pub material: Option<FilamentMaterial>,
+    pub color: Option<String>,
+    pub diameter: Option<FilamentDiameter>,
+    pub weight: Option<Grams>,
+
+    pub page: Option<u32>,
+    pub per_page: u32,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct ProductSearchResponse {
+    pub items: Vec<ProductResponse>,
+    pub total: u64,
+    pub total_pages: u64,
 }
