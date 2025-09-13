@@ -1,4 +1,2 @@
 /target
 /config.toml
-/tls/fullchain.pem
-/tls/privkey.pem
