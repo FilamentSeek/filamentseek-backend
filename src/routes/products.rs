@@ -8,9 +8,10 @@ use utoipa::ToSchema;
 use crate::{
     error::Error,
     generic::{BearerToken, GenericResponse, surrealdb_client},
-    models::product::{
-        Cents, FilamentDiameter, FilamentMaterial, Grams, Product, ProductRequest, ProductResponse,
-    },
+};
+
+use filamentseek_model::product::{
+    Cents, FilamentDiameter, FilamentMaterial, Grams, Product, ProductRequest, ProductResponse,
 };
 
 /// Get product
