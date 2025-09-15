@@ -252,8 +252,6 @@ pub async fn search_products(
         ranked.sort_by_key(|(score, _)| *score);
         ranked.reverse();
         products = ranked.into_iter().map(|(_, p)| p).collect();
-    } else {
-        products.sort_by_key(|p| p.price);
     }
 
     let page = request.page.unwrap_or(1).max(1);
