@@ -213,6 +213,13 @@ pub async fn search_products(
     let client = surrealdb_client().await.map_err(Error::from)?;
     let mut products = Product::db_all(&client).await.map_err(Error::from)?;
 
+    if let Some(sort_by) = &request.sort_by {
+        match sort_by {
+            SortBy::Price => products.sort_by_key(|p| p.price),
+            SortBy::PricePerKg => products.sort_by_key(|p| p.price_per_kg),
+        }
+    }
+
     if let Some(min_price) = request.min_price {
         products.retain(|p| p.price >= min_price);
     }
@@ -283,6 +290,7 @@ pub struct ProductSearchRequest {
     pub color: Option<String>,
     pub diameter: Option<FilamentDiameter>,
     pub weight: Option<Grams>,
+    pub sort_by: Option<SortBy>,
 
     pub page: Option<u32>,
     pub per_page: u32,
@@ -293,4 +301,11 @@ pub struct ProductSearchResponse {
     pub items: Vec<ProductResponse>,
     pub total: u64,
     pub total_pages: u64,
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SortBy {
+    Price,
+    PricePerKg,
 }
